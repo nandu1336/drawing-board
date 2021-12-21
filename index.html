@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="skeleton.css">
+<link rel="stylesheet" href="styles.css">
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="two columns">
+                <button class id="clearButton" onclick="reset()">reset</button><br><br>
+            </div>
+
+            <div class="three columns">
+
+            </div>
+
+            <div class="four columns u-pull-right ls-1">
+                <p>pencil size: <span id="statusBar__pencilSize"></span></p>
+                <p>pencil color: <span id="statusBar__pencilColor"></span></p>
+                <p>eraser size: <span id="statusBar__eraserSize"></span></p>
+                <p>selected tool: <span id="statusBar__selectedTool"></span></p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="toolBar row">
+            <div id="basic" class=" six columns"></div>
+
+            <div id="colorPicker" class=" three columns u-pull-right">
+                <div class="row" id="colorPicker__row1">
+
+                </div>
+
+                <div class="row" id="colorPicker__row2">
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="canvas">
+            <canvas id="myCanvas">
+                Your browser does not support the HTML canvas tag.
+            </canvas>
+        </div>
+
+    </div>
+
+    <script src="canvas.js"></script>
+</body>
+
+</html>
