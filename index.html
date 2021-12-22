@@ -2,9 +2,11 @@
 <html>
 <link rel="stylesheet" href="skeleton.css">
 <link rel="stylesheet" href="styles.css">
+<link href='https://fonts.googleapis.com/css?family=Share Tech Mono' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Ubuntu Mono' rel='stylesheet'>
 
 <body>
-    <div class="container">
+    <div id="statusBar" class="container">
         <div class="row">
             <div class="two columns">
                 <button class id="clearButton" onclick="reset()">reset</button><br><br>
@@ -14,19 +16,43 @@
 
             </div>
 
-            <div class="four columns u-pull-right ls-1">
-                <p>pencil size: <span id="statusBar__pencilSize"></span></p>
-                <p>pencil color: <span id="statusBar__pencilColor"></span></p>
-                <p>eraser size: <span id="statusBar__eraserSize"></span></p>
-                <p>selected tool: <span id="statusBar__selectedTool"></span></p>
+            <div class="five columns u-pull-right ls-1">
+                <p>
+                    <span class="status-header">selected tool: </span>
+                    <span id="statusBar__selectedTool"></span>
+                </p>
+                <p>
+                    <span class="status-header">pencil color:</span>
+                    <span id="statusBar__pencilColor"></span>
+                    || <span class="status-header">pencil size:</span>
+                    <span id="statusBar__pencilSize"></span>
+                </p>
+
+                <p>
+                    <span class="status-header">font color:</span>
+                    <span id="statusBar__fontColor"></span>
+                    || <span class="status-header">font size:</span>
+                    <span id="statusBar__fontSize"></span>
+
+                </p>
+                <p>
+                    <span class="status-header">eraser size:</span>
+                    <span id="statusBar__eraserSize"></span>
+                </p>
             </div>
         </div>
     </div>
 
 
     <div class="container">
-        <div class="toolBar row">
+        <div class="toolBar row" id="toolBar">
             <div id="basic" class=" six columns"></div>
+
+            <div class="three columns" style="margin-top:2px">
+                <select class="u-full-width" id="fontFamilySelector" onchange="changeFontFamily()">
+
+                </select>
+            </div>
 
             <div id="colorPicker" class=" three columns u-pull-right">
                 <div class="row" id="colorPicker__row1">
@@ -42,14 +68,16 @@
 
         </div>
 
-
-        <div class="canvas">
+        <div class="row" id="canvasWrapper" style="border: 1px solid black;">
             <canvas id="myCanvas">
                 Your browser does not support the HTML canvas tag.
             </canvas>
+
         </div>
 
+
     </div>
+
 
     <script src="canvas.js"></script>
 </body>

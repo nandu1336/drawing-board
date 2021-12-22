@@ -4,9 +4,8 @@ html{
     height: 100vh;
 }
 
-#myCanvas {
-    margin: 5px;
-    border: 1px solid #000000;
+.status-header{
+    color:tomato;
 }
 
 .ls-1{
@@ -19,7 +18,7 @@ html{
 
 .toolBar{
     border: 1px solid black;
-    margin: 5px;
+    margin-bottom: 2px;
 }
 
 .toolItem{
@@ -33,7 +32,7 @@ html{
     color: white;
 }
 
-.pencilCursor{
+/* .pencilCursor{
     cursor: url('./icons/pencil.svg'), auto;
 
 }
@@ -41,4 +40,4 @@ html{
 .eraserCursor{
     cursor: url('./icons/eraser.svg'), auto;
     
-}
+} */
