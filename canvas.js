@@ -15,8 +15,13 @@ let pencilSize = 2;
 let pencilColor = 'black';
 let selectedTool = 'pencil';
 let backgroundColor = 'white';
+let prevSelectedTool = '';
 
-let updateStatus = () => {
+let currentStackFrame = '';
+let undoStack = [];
+let redoStack = [];
+
+const updateStatus = () => {
     document.getElementById("statusBar__pencilSize").innerText = pencilSize;
     document.getElementById("statusBar__eraserSize").innerText = eraserSize;
     document.getElementById("statusBar__pencilColor").innerText = pencilColor;
@@ -35,9 +40,13 @@ const reset = () => {
     document.getElementById('eraser__button').classList.remove('selected');
     document.getElementById('pencil__button').classList.add("selected");
     canvas.style.backgroundColor = "white";
+
+    currentStackFrame = '';
+    undoStack = [];
+    redoStack = [];
 }
 
-document.addEventListener('mouseup', (e) => { isDrawing = false; context.closePath(); })
+document.addEventListener('mouseup', () => { isDrawing = false; context.closePath(); })
 
 window.onload = () => {
 
@@ -56,9 +65,16 @@ window.onload = () => {
         toY = e.offsetX;
         context.moveTo(toX, toY);
         context.lineTo(toX, toY);
+
         context.stroke();
         isDrawing = false;
         context.closePath();
+
+        // storing current canvas data into stack
+        if (currentStackFrame) {
+            undoStack.push(currentStackFrame);
+        }
+        currentStackFrame = context.getImageData(0, 0, canvas.width, canvas.height);
     });
 
     canvas.addEventListener('mouseleave', (e) => {
@@ -83,9 +99,22 @@ window.onload = () => {
 
 }
 
-// Tool handlers
+// Onclick handlers for all the tools
+const changeHighlighter = (clickedItem) => {
+    if (prevSelectedTool) {
+        let ps = document.getElementById(prevSelectedTool + '__button');
+        if (!ps) return;
+        ps.classList.remove("selected");
+    }
+    selectedTool = clickedItem;
+    prevSelectedTool = selectedTool;
+    updateStatus();
 
-const erase = () => context.globalCompositeOperation = 'destination-out';
+    let cs = document.getElementById(selectedTool + '__button');
+    if (!cs) return;
+    cs.classList.add("selected");
+}
+
 const increase = () => {
     if (selectedTool == 'eraser') {
         eraserSize += 2;
@@ -113,24 +142,74 @@ const decrease = () => {
 };
 
 const handlePencilClick = () => {
+    clickedItem = "pencil";
+    changeHighlighter(clickedItem);
     context.globalCompositeOperation = 'source-over';
     context.lineWidth = pencilSize;
-    updateStatus();
-    prevSelectedTool = selectedTool;
+
     document.getElementById("myCanvas").classList.remove('eraserCursor');
     document.getElementById("myCanvas").classList.add('pencilCursor');
+    updateStatus();
+}
+
+const handleEraser = () => {
+    clickedItem = "eraser";
+    changeHighlighter(clickedItem);
+    context.lineWidth = eraserSize;
+    context.globalCompositeOperation = 'destination-out';
+
+    document.getElementById("myCanvas").classList.remove('pencilCursor');
+    document.getElementById("myCanvas").classList.add('eraserCursor');
+    updateStatus();
+}
+
+const handleBackgroundColorPicker = () => {
+    clickedItem = "backgroundColorPicker";
+    console.log("handleBackgroundColoPicker called")
+    changeHighlighter(clickedItem);
+
+    document.getElementById("myCanvas").classList.remove('eraserCursor');
+    document.getElementById("myCanvas").classList.remove('pencilCursor');
+    updateStatus();
+}
+
+const handleUndo = () => {
+    let ps;
+    redoStack.push(currentStackFrame);
+
+    if (!undoStack.length) {
+        ps = new ImageData(canvas.width, canvas.height);
+    }
+    else {
+        ps = undoStack.pop();
+    }
+
+    currentStackFrame = ps;
+    context.putImageData(currentStackFrame, 0, 0);
+    updateStatus();
+}
+
+const handleRedo = () => {
+
+    if (!redoStack.length) return;
+
+    let sf = redoStack.pop();
+    undoStack.push(currentStackFrame);
+    currentStackFrame = sf;
+    context.putImageData(sf, 0, 0);
+    updateStatus();
 }
 
 // Tools 
 
 const tools = [
-    { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg' },
-    { toolName: "eraser", symbol: '[]', id: 'eraser', iconPath: './icons/eraser.svg' },
-    { toolName: "increaser", symbol: '+', id: 'increaser', iconPath: './icons/plus.svg' },
-    { toolName: "decreaser", symbol: '-', id: 'decreaser', iconPath: './icons/minus.svg' },
-    { toolName: "undo", symbol: '<-', id: 'undo', iconPath: './icons/undo.svg' },
-    { toolName: "redo", symbol: '->', id: 'redo', iconPath: './icons/redo.svg' },
-    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '' }
+    { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilClick" },
+    { toolName: "eraser", symbol: '[]', id: 'eraser', iconPath: './icons/eraser.svg', handler: "handleEraser" },
+    { toolName: "increaser", symbol: '+', id: 'increaser', iconPath: './icons/plus.svg', handler: "increase" },
+    { toolName: "decreaser", symbol: '-', id: 'decreaser', iconPath: './icons/minus.svg', handler: "decrease" },
+    { toolName: "undo", symbol: '<-', id: 'undo', iconPath: './icons/undo.svg', handler: "handleUndo" },
+    { toolName: "redo", symbol: '->', id: 'redo', iconPath: './icons/redo.svg', handler: "handleRedo" },
+    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '', handler: "handleBackgroundColorPicker" },
 
 ];
 let basicTools = document.getElementById("basic");
@@ -144,6 +223,7 @@ tools.map((tool) => {
         toolItems += `
         <button class="toolItem" id="${tool.id}__button">
             <div 
+                onclick="${tool.handler}()"
                 id = ${tool.id}
                 style="
                     background-color: ${backgroundColor}; 
@@ -157,77 +237,16 @@ tools.map((tool) => {
     else {
         toolItems += `<button class="toolItem" id="${tool.id}__button">`
         if (tool.iconPath) {
-            toolItems += `<img id=${tool.id} src="${tool.iconPath}" />`;
+            toolItems += `<img id=${tool.id} src="${tool.iconPath}" onclick="${tool.handler}()"/>`;
         }
         else {
-            toolItems += `<span id=${tool.id}>${tool.symbol}</span>`;
+            toolItems += `<span id=${tool.id} onclick="${tool.handler}()">${tool.symbol}()</span>`;
         }
         toolItems += `</button>`;
     }
 })
 basicTools.innerHTML = toolItems;
 
-// adds onclick handlers for the above created buttons.
-
-const pencil = document.getElementById("pencil");
-const eraser = document.getElementById("eraser");
-const increaser = document.getElementById("increaser");
-const decreaser = document.getElementById("decreaser");
-const undo = document.getElementById("undo");
-const redo = document.getElementById("redo");
-const backgroundColorPicker = document.getElementById("backgroundColorPicker");
-
-const toolsArray = [pencil, eraser, increaser, decreaser, undo, redo, backgroundColorPicker];
-let prevSelectedTool = '';
-
-toolsArray.map(tool => {
-    if (!tool) return;
-
-    tool.addEventListener('click', (e) => {
-        let clickedItem = e.target.id;
-
-        if (["pencil", "eraser", "backgroundColorPicker"].includes(clickedItem)) {
-            if (prevSelectedTool) {
-                let ps = document.getElementById(prevSelectedTool + '__button');
-                if (!ps) return;
-                ps.classList.remove("selected");
-            }
-            selectedTool = clickedItem;
-            prevSelectedTool = selectedTool;
-            updateStatus();
-
-            let cs = document.getElementById(selectedTool + '__button');
-            if (!cs) return;
-            cs.classList.add("selected");
-
-        }
-
-        if (clickedItem == "pencil") {
-            handlePencilClick();
-        }
-
-        else if (clickedItem == 'increaser') {
-            increase();
-        }
-        else if (clickedItem == 'decreaser') {
-            decrease();
-        }
-        else if (clickedItem == 'eraser') {
-            document.getElementById("myCanvas").classList.remove('pencilCursor');
-            document.getElementById("myCanvas").classList.add('eraserCursor');
-
-            context.lineWidth = eraserSize;
-            erase();
-            updateStatus();
-        }
-        else if (clickedItem == "backgroundColorPicker") {
-            document.getElementById("myCanvas").classList.remove('eraserCursor');
-            document.getElementById("myCanvas").classList.remove('pencilCursor');
-        }
-
-    });
-
-});
 
 
 updateStatus();
