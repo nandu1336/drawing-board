@@ -1,9 +1,11 @@
 let canvas = document.getElementById('myCanvas');
+let canvasWrapper = document.getElementById("canvasWrapper");
 canvas.height = 500;
-canvas.width = 950;
+canvas.width = canvasWrapper.clientWidth;
 
 let context = canvas.getContext("2d");
-let para = document.getElementById("para");
+// context.font = " 22px Share Tech Mono";
+context.font = "22px Ubuntu Mono normal";
 let fromX = 0;
 let fromY = 0;
 let toX = 0;
@@ -12,6 +14,7 @@ let isDrawing = false;
 
 let eraserSize = 5;
 let pencilSize = 2;
+let stepSize = 2;
 let pencilColor = 'black';
 let selectedTool = 'pencil';
 let backgroundColor = 'white';
@@ -21,11 +24,24 @@ let currentStackFrame = '';
 let undoStack = [];
 let redoStack = [];
 
+let SPECIAL_KEYS = ["Backspace", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];    //, "Alt", "Tab"];
+let textBuffer = '';
+let colorPickerId = "colorPicker__row";
+let textX = 0;
+let textY = 0;
+let fontSize = 22;
+let fontFamily = "Ubuntu Mono normal";
+let fontColor = "black";
+
 const updateStatus = () => {
     document.getElementById("statusBar__pencilSize").innerText = pencilSize;
     document.getElementById("statusBar__eraserSize").innerText = eraserSize;
     document.getElementById("statusBar__pencilColor").innerText = pencilColor;
     document.getElementById("statusBar__selectedTool").innerText = selectedTool;
+    document.getElementById("statusBar__fontColor").innerText = fontColor;
+    document.getElementById("statusBar__fontSize").innerText = fontSize;
+
+
 }
 
 const reset = () => {
@@ -36,27 +52,81 @@ const reset = () => {
     pencilColor = 'black';
     selectedTool = 'pencil';
     updateStatus();
-    handlePencilClick();
-    document.getElementById('eraser__button').classList.remove('selected');
-    document.getElementById('pencil__button').classList.add("selected");
+    handlePencilSelection();
     canvas.style.backgroundColor = "white";
-
+    document.getElementById("backgroundColorPicker").style.backgroundColor = "white";
     currentStackFrame = '';
     undoStack = [];
     redoStack = [];
+    fromX = 0;
+    fromY = 0;
+    toX = 0;
+    toY = 0;
+    fontSize = 22;
+    fontFamily = "Ubuntu Mono normal";
+    document.getElementById('eraser__button').classList.remove('selected');
+    document.getElementById('pencil__button').classList.add("selected");
 }
 
-document.addEventListener('mouseup', () => { isDrawing = false; context.closePath(); })
+document.addEventListener('mouseup', () => {
+    isDrawing = false; context.closePath();
+})
+
+const clearCurrentText = () => {
+    let fontStyles = context.font;
+    let fontSize = 0;
+
+    let s = fontStyles.split(" ")[0];
+    let pxIndex = s.indexOf("px");
+
+    if (pxIndex > -1) {
+        fontSize = s.substring(0, pxIndex);
+    }
+
+
+    fontSize = parseFloat(fontSize);
+    context.clearRect(textX - 1, textY - fontSize, fontSize * (textBuffer.length + 1), fontSize + 5);
+
+}
 
 window.onload = () => {
 
+    document.addEventListener('keydown', (e) => {
+        if (selectedTool == 'text') {
+            isDrawing = false;
+            let key = e.key;
+
+
+            if (SPECIAL_KEYS.includes(key)) {
+                if (key == "Backspace") {
+                    textBuffer = textBuffer.substring(0, (textBuffer.length - 1));
+                }
+            }
+            else {
+                textBuffer += key;
+            }
+
+            clearCurrentText();
+            context.fillText(textBuffer, textX, textY);
+        }
+
+    });
+
     canvas.addEventListener('mousedown', (e) => {
 
-        isDrawing = true;
-        fromX = e.offsetX;
-        fromY = e.offsetY;
-        context.beginPath();
-        context.moveTo(fromX, fromY);
+        if (selectedTool === 'text') {
+            textX = e.offsetX;
+            textY = e.offsetY;
+            textBuffer = '';
+        }
+        else {
+            isDrawing = true;
+            fromX = e.offsetX;
+            fromY = e.offsetY;
+            context.beginPath();
+            context.moveTo(fromX, fromY);
+
+        }
 
     });
 
@@ -99,6 +169,16 @@ window.onload = () => {
 
 }
 
+
+const changeCursor = (tool) => {
+    if (tool.cursorType === "custom") {
+        canvas.style.cursor = `url('${tool.cursor}'), auto`;
+        return;
+    };
+    canvas.style.cursor = tool.cursor;
+}
+
+
 // Onclick handlers for all the tools
 const changeHighlighter = (clickedItem) => {
     if (prevSelectedTool) {
@@ -106,74 +186,77 @@ const changeHighlighter = (clickedItem) => {
         if (!ps) return;
         ps.classList.remove("selected");
     }
-    selectedTool = clickedItem;
+    selectedTool = clickedItem.id;
     prevSelectedTool = selectedTool;
     updateStatus();
 
     let cs = document.getElementById(selectedTool + '__button');
     if (!cs) return;
     cs.classList.add("selected");
+    changeCursor(clickedItem);
 }
 
-const increase = () => {
+const increase = (tool) => {
+
     if (selectedTool == 'eraser') {
-        eraserSize += 2;
+        eraserSize += stepSize;
         context.lineWidth = eraserSize;
     }
+    else if (selectedTool == 'text') {
+        fontSize += stepSize;
+        context.font = fontSize + "px " + fontFamily;
+    }
     else {
-        pencilSize += 2;
+        pencilSize += stepSize;
         context.lineWidth = pencilSize;
     }
     updateStatus();
 }
 
-const decrease = () => {
+const decrease = (tool) => {
     if (selectedTool == 'eraser') {
-        eraserSize -= 2;
-        if (eraserSize <= 0) eraserSize = 2;
+        eraserSize -= stepSize;
+        if (eraserSize <= 0) eraserSize = stepSize;
         context.lineWidth = eraserSize;
     }
+    else if (selectedTool == 'text') {
+        fontSize -= stepSize;
+        if (fontSize <= 0) fontSize = stepSize;
+        context.font = fontSize + "px " + fontFamily;
+    }
     else {
-        pencilSize -= 2;
-        if (pencilSize <= 0) pencilSize = 2;
+        pencilSize -= stepSize;
+        if (pencilSize <= 0) pencilSize = stepSize;
         context.lineWidth = pencilSize;
     }
     updateStatus();
 };
 
-const handlePencilClick = () => {
-    clickedItem = "pencil";
-    changeHighlighter(clickedItem);
+const handlePencilSelection = (tool = undefined) => {
+    if (!tool) {
+        tool = { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilSelection", cursorType: "custom", cursor: './icons/pencil.svg' };
+    }
+
+    changeHighlighter(tool);
     context.globalCompositeOperation = 'source-over';
     context.lineWidth = pencilSize;
 
-    document.getElementById("myCanvas").classList.remove('eraserCursor');
-    document.getElementById("myCanvas").classList.add('pencilCursor');
     updateStatus();
 }
 
-const handleEraser = () => {
-    clickedItem = "eraser";
-    changeHighlighter(clickedItem);
+const handleEraserSelection = (tool) => {
+    changeHighlighter(tool);
     context.lineWidth = eraserSize;
     context.globalCompositeOperation = 'destination-out';
-
-    document.getElementById("myCanvas").classList.remove('pencilCursor');
-    document.getElementById("myCanvas").classList.add('eraserCursor');
     updateStatus();
 }
 
-const handleBackgroundColorPicker = () => {
-    clickedItem = "backgroundColorPicker";
-    console.log("handleBackgroundColoPicker called")
-    changeHighlighter(clickedItem);
-
-    document.getElementById("myCanvas").classList.remove('eraserCursor');
-    document.getElementById("myCanvas").classList.remove('pencilCursor');
+const handleBackgroundColorPicker = (tool) => {
+    changeHighlighter(tool);
     updateStatus();
 }
 
-const handleUndo = () => {
+const handleUndo = (tool) => {
     let ps;
     redoStack.push(currentStackFrame);
 
@@ -189,8 +272,7 @@ const handleUndo = () => {
     updateStatus();
 }
 
-const handleRedo = () => {
-
+const handleRedo = (tool) => {
     if (!redoStack.length) return;
 
     let sf = redoStack.pop();
@@ -200,17 +282,29 @@ const handleRedo = () => {
     updateStatus();
 }
 
+const handleTextSelection = (tool) => {
+    console.log("handleTextSelection");
+    changeHighlighter(tool);
+}
+
+const changeFontFamily = () => {
+    fontFamily = document.getElementById('fontFamilySelector').value;
+    console.log('changeFontFamily called with:', fontFamily);
+    context.font = fontSize + "px " + fontFamily;
+}
 // Tools 
 
-const tools = [
-    { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilClick" },
-    { toolName: "eraser", symbol: '[]', id: 'eraser', iconPath: './icons/eraser.svg', handler: "handleEraser" },
-    { toolName: "increaser", symbol: '+', id: 'increaser', iconPath: './icons/plus.svg', handler: "increase" },
-    { toolName: "decreaser", symbol: '-', id: 'decreaser', iconPath: './icons/minus.svg', handler: "decrease" },
-    { toolName: "undo", symbol: '<-', id: 'undo', iconPath: './icons/undo.svg', handler: "handleUndo" },
-    { toolName: "redo", symbol: '->', id: 'redo', iconPath: './icons/redo.svg', handler: "handleRedo" },
-    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '', handler: "handleBackgroundColorPicker" },
 
+const tools = [
+    { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilSelection", cursorType: "custom", cursor: './icons/pencil.svg' },
+    { toolName: "eraser", symbol: '[]', id: 'eraser', iconPath: './icons/eraser.svg', handler: "handleEraserSelection", cursorType: "custom", cursor: './icons/eraser.svg' },
+    { toolName: "increaser", symbol: '+', id: 'increaser', iconPath: './icons/plus.svg', handler: "increase", cursorType: "builtIn", cursor: 'default' },
+    { toolName: "decreaser", symbol: '-', id: 'decreaser', iconPath: './icons/minus.svg', handler: "decrease", cursorType: "builtIn", cursor: 'default' },
+    { toolName: "undo", symbol: '<-', id: 'undo', iconPath: './icons/undo.svg', handler: "handleUndo", cursorType: "builtIn", cursor: 'default' },
+    { toolName: "redo", symbol: '->', id: 'redo', iconPath: './icons/redo.svg', handler: "handleRedo", cursorType: "builtIn", cursor: 'default' },
+    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '', handler: "handleBackgroundColorPicker", cursorType: "builtIn", cursor: 'default' },
+    { toolName: "text", symbol: 'T', id: 'text', iconPath: './icons/text.svg', handler: "handleTextSelection", cursorType: "builtIn", cursor: 'text' },
+    // { toolName: "clear text", symbol: 'C', id: 'clearText', iconPath: './icons/text-clear.svg', handler: "clearCurrentText", cursorType: "builtIn", cursor: 'default' }
 ];
 let basicTools = document.getElementById("basic");
 let toolItems = '';
@@ -223,7 +317,7 @@ tools.map((tool) => {
         toolItems += `
         <button class="toolItem" id="${tool.id}__button">
             <div 
-                onclick="${tool.handler}()"
+                onclick='${tool.handler}(${JSON.stringify(tool)})'
                 id = ${tool.id}
                 style="
                     background-color: ${backgroundColor}; 
@@ -236,17 +330,11 @@ tools.map((tool) => {
     }
     else {
         toolItems += `<button class="toolItem" id="${tool.id}__button">`
-        if (tool.iconPath) {
-            toolItems += `<img id=${tool.id} src="${tool.iconPath}" onclick="${tool.handler}()"/>`;
-        }
-        else {
-            toolItems += `<span id=${tool.id} onclick="${tool.handler}()">${tool.symbol}()</span>`;
-        }
+        toolItems += `<img id=${tool.id} src="${tool.iconPath}" onclick='${tool.handler}(${JSON.stringify(tool)})'/>`;
         toolItems += `</button>`;
     }
 })
 basicTools.innerHTML = toolItems;
-
 
 
 updateStatus();
@@ -254,18 +342,24 @@ reset();
 
 // color picker
 const handleColorSelection = (color) => {
-    if (selectedTool == "pencil") {
-        return changeStrokeColor(color);
+    if (selectedTool == "pencil")
+        changeStrokeColor(color);
+
+    else if (selectedTool == "backgroundColorPicker")
+        changeBackgroundColor(color);
+
+    else if (selectedTool == "text") {
+        fontColor = color.colorName;
+        context.fillStyle = color.colorCode;
     }
 
-    return changeBackgroundColor(color);
+    updateStatus();
 }
 
 const changeStrokeColor = (color) => {
 
     context.strokeStyle = color.colorCode;
     pencilColor = color.colorName;
-    updateStatus();
 }
 
 const changeBackgroundColor = (color) => {
@@ -273,10 +367,9 @@ const changeBackgroundColor = (color) => {
     backgroundColor = color.colorCode;
     canvas.style.backgroundColor = color.colorCode;
     document.getElementById("backgroundColorPicker").style.backgroundColor = color.colorCode;
-    updateStatus();
 }
 
-let colorPickerId = "colorPicker__row";
+// color picker boxes
 
 let colorRows = [
     [
@@ -297,6 +390,7 @@ let colorRows = [
     ]
 ];
 
+// code to add color picker to the toolbar
 
 colorRows.map((row, rowIndex) => {
     colorPalletes = '';
@@ -313,3 +407,15 @@ colorRows.map((row, rowIndex) => {
     colorPalletes = '';
 
 })
+
+
+// Font Family
+
+let availabelFonts = ['Ubuntu Mono', 'Share Tech Mono',];
+let fontFamilyOptions = '';
+
+availabelFonts.map(eachFont => {
+    fontFamilyOptions += `<option value="${eachFont}">${eachFont}</option>`;
+});
+
+document.getElementById("fontFamilySelector").innerHTML = fontFamilyOptions;
