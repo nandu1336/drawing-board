@@ -16,7 +16,7 @@ let eraserSize = 5;
 let pencilSize = 2;
 let stepSize = 2;
 let pencilColor = 'black';
-let selectedTool = 'pencil';
+let selectedTool = 'square';
 let backgroundColor = 'white';
 let prevSelectedTool = '';
 
@@ -32,6 +32,14 @@ let textY = 0;
 let fontSize = 22;
 let fontFamily = "Ubuntu Mono normal";
 let fontColor = "black";
+
+let shapeWidth = 0;
+let shapeHeight = 0;
+let prevWidth = null;
+let prevHeight = null;
+let shpaesOnCanvas = [];
+let fillerColor = "black";
+let prevRadius = null;
 
 const updateStatus = () => {
     document.getElementById("statusBar__pencilSize").innerText = pencilSize;
@@ -50,7 +58,7 @@ const reset = () => {
     eraserSize = 5;
     pencilSize = 2;
     pencilColor = 'black';
-    selectedTool = 'pencil';
+    selectedTool = 'square';
     updateStatus();
     handlePencilSelection();
     canvas.style.backgroundColor = "white";
@@ -66,6 +74,15 @@ const reset = () => {
     fontFamily = "Ubuntu Mono normal";
     document.getElementById('eraser__button').classList.remove('selected');
     document.getElementById('pencil__button').classList.add("selected");
+}
+
+const clearArc = (context, x, y, radius) => {
+    context.save();
+    context.globalCompositeOperation = 'destination-out';
+    context.beginPath();
+    context.arc(x, y, radius, 0, 2 * Math.PI, false);
+    context.fill();
+    context.restore();
 }
 
 document.addEventListener('mouseup', () => {
@@ -119,7 +136,14 @@ window.onload = () => {
             textY = e.offsetY;
             textBuffer = '';
         }
-        else {
+
+        else if (Object.keys(shapes).includes(selectedTool)) {
+            isDrawing = true;
+            originX = e.offsetX;
+            originY = e.offsetY;
+        }
+
+        else if (selectedTool == 'pencil') {
             isDrawing = true;
             fromX = e.offsetX;
             fromY = e.offsetY;
@@ -128,17 +152,64 @@ window.onload = () => {
 
         }
 
+        else if (selectedTool == 'colorFiller') {
+            let selectedShape = shpaesOnCanvas.filter(shape => shape.isInside(e.offsetX, e.offsetY));
+            selectedShape = selectedShape.length ? selectedShape[0] : null;
+            if (!selectedShape) {
+                return alert("Color filler works on shapes. Add a shape and try again.");
+            }
+            context.fill(selectedShape.getPath());
+        }
+
     });
 
     canvas.addEventListener('mouseup', (e) => {
-        toX = e.offsetY;
-        toY = e.offsetX;
-        context.moveTo(toX, toY);
-        context.lineTo(toX, toY);
+        // console.log('mouseup occured, selectedTool:', selectedTool);
+        toX = e.offsetX;
+        toY = e.offsetY;
 
-        context.stroke();
-        isDrawing = false;
-        context.closePath();
+        if (selectedTool == 'square') {
+            context.setLineDash([]);
+            console.log("context.globalCompositeOperation:", context.globalCompositeOperation);
+            let width = toX - originX;
+            let height = toY - originY;
+
+            context.clearRect(originX, originY, prevWidth, prevHeight);
+            let rectPath = new Path2D();
+            let tempRect = new Rectangle(originX, originY, width, height);
+
+            rectPath.rect(originX, originY, width, height);
+            tempRect.addPath(rectPath);
+            shpaesOnCanvas.push(tempRect);
+            console.log("created Reactangle object:", tempRect);
+            context.stroke(rectPath);
+            originX = 0;
+            originY = 0;
+            prevWidth = null;
+            prevWidth = null;
+        }
+
+        else if (selectedTool == "triable") { }
+
+        else if (selectedTool == "circle") {
+            context.setLineDash([]);
+            let radius = Math.sqrt(Math.pow((originX - toX), 2) + Math.pow((originY - toY), 2));
+            context.beginPath();
+
+            let tempCircle = new Circle(originX, originY, radius);
+            context.arc(originX, originY, radius, 0, 360);
+            shpaesOnCanvas.push(tempCircle);
+            context.stroke();
+        }
+
+        else if (selectedTool == "pencil") {
+            context.moveTo(toX, toY);
+            context.lineTo(toX, toY);
+            context.stroke();
+            isDrawing = false;
+            context.closePath();
+
+        }
 
         // storing current canvas data into stack
         if (currentStackFrame) {
@@ -161,10 +232,52 @@ window.onload = () => {
 
         toX = e.offsetX;
         toY = e.offsetY;
-        context.lineTo(toX, toY);
-        context.stroke();
-        fromX = toX;
-        fromY = toY;
+
+        if (selectedTool == 'square') {
+            context.setLineDash([5, 3]);
+            if (prevWidth || prevHeight) {
+                if (prevWidth < 0) prevWidth -= 1;
+                if (prevWidth >= 0) prevWidth += 1;
+
+                if (prevHeight < 0) prevHeight -= 1;
+                if (prevHeight >= 0) prevHeight += 1;
+                context.clearRect(originX, originY, prevWidth, prevHeight);
+
+            }
+
+            width = toX - originX;
+            height = toY - originY;
+            prevWidth = width;
+            prevHeight = height;
+            context.strokeRect(originX, originY, width, height);
+
+        }
+
+        else if (selectedTool == 'circle') {
+            context.setLineDash([5, 3]);
+            if (prevRadius) {
+                if (prevRadius < 0) prevRadius -= 1;
+                if (prevRadius >= 0) prevRadius += 1;
+
+                clearArc(context, originX, originY, prevRadius);
+
+            }
+
+            let radius = Math.sqrt(Math.pow((originX - toX), 2) + Math.pow((originY - toY), 2));
+            context.beginPath()
+            context.arc(originX, originY, radius, 0, 360);
+            context.stroke();
+            prevRadius = radius;
+        }
+
+        else if (selectedTool == 'pencil') {
+            context.setLineDash([]);
+            context.lineTo(toX, toY);
+            context.stroke();
+            fromX = toX;
+            fromY = toY;
+        }
+
     });
 
 }
@@ -240,7 +353,6 @@ const handlePencilSelection = (tool = undefined) => {
     changeHighlighter(tool);
     context.globalCompositeOperation = 'source-over';
     context.lineWidth = pencilSize;
-
     updateStatus();
 }
 
@@ -287,24 +399,33 @@ const handleTextSelection = (tool) => {
     changeHighlighter(tool);
 }
 
+const handleColorFillerSelection = (tool) => {
+    console.log("tool in handleColorFillerSelection:", tool);
+    changeHighlighter(tool);
+}
+
+// const handleListShapesSelection = (tool) => {
+//     changeHighlighter(tool);
+// }
+
 const changeFontFamily = () => {
     fontFamily = document.getElementById('fontFamilySelector').value;
-    console.log('changeFontFamily called with:', fontFamily);
     context.font = fontSize + "px " + fontFamily;
 }
 // Tools 
 
 
 const tools = [
-    { toolName: "pencil", symbol: '!', id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilSelection", cursorType: "custom", cursor: './icons/pencil.svg' },
-    { toolName: "eraser", symbol: '[]', id: 'eraser', iconPath: './icons/eraser.svg', handler: "handleEraserSelection", cursorType: "custom", cursor: './icons/eraser.svg' },
-    { toolName: "increaser", symbol: '+', id: 'increaser', iconPath: './icons/plus.svg', handler: "increase", cursorType: "builtIn", cursor: 'default' },
-    { toolName: "decreaser", symbol: '-', id: 'decreaser', iconPath: './icons/minus.svg', handler: "decrease", cursorType: "builtIn", cursor: 'default' },
-    { toolName: "undo", symbol: '<-', id: 'undo', iconPath: './icons/undo.svg', handler: "handleUndo", cursorType: "builtIn", cursor: 'default' },
-    { toolName: "redo", symbol: '->', id: 'redo', iconPath: './icons/redo.svg', handler: "handleRedo", cursorType: "builtIn", cursor: 'default' },
-    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '', handler: "handleBackgroundColorPicker", cursorType: "builtIn", cursor: 'default' },
-    { toolName: "text", symbol: 'T', id: 'text', iconPath: './icons/text.svg', handler: "handleTextSelection", cursorType: "builtIn", cursor: 'text' },
-    // { toolName: "clear text", symbol: 'C', id: 'clearText', iconPath: './icons/text-clear.svg', handler: "clearCurrentText", cursorType: "builtIn", cursor: 'default' }
+    { toolName: "pencil", id: 'pencil', iconPath: './icons/pencil.svg', handler: "handlePencilSelection", cursorType: "custom", cursor: './icons/pencil.svg', hasChildern: false, classes: [] },
+    { toolName: "eraser", id: 'eraser', iconPath: './icons/eraser.svg', handler: "handleEraserSelection", cursorType: "custom", cursor: './icons/eraser.svg', hasChildern: false, classes: [] },
+    { toolName: "increaser", id: 'increaser', iconPath: './icons/plus.svg', handler: "increase", cursorType: "builtIn", cursor: 'default', hasChildern: false, classes: [] },
+    { toolName: "decreaser", id: 'decreaser', iconPath: './icons/minus.svg', handler: "decrease", cursorType: "builtIn", cursor: 'default', hasChildern: false, classes: [] },
+    { toolName: "undo", id: 'undo', iconPath: './icons/undo.svg', handler: "handleUndo", cursorType: "builtIn", cursor: 'default', hasChildern: false, classes: [] },
+    { toolName: "redo", id: 'redo', iconPath: './icons/redo.svg', handler: "handleRedo", cursorType: "builtIn", cursor: 'default', hasChildern: false, classes: [] },
+    { toolName: "background color picker", id: 'backgroundColorPicker', symbol: '', handler: "handleBackgroundColorPicker", cursorType: "builtIn", cursor: 'default', hasChildern: false, classes: [] },
+    { toolName: "text", id: 'text', iconPath: './icons/text.svg', handler: "handleTextSelection", cursorType: "builtIn", cursor: 'text', hasChildern: false, classes: [] },
+    { toolName: "listShapes", id: 'listShapes', iconPath: './icons/listShapes.svg', handler: "", cursorType: "builtIn", cursor: 'default', hasChildern: true, classes: ['tooltip'] },
+    { toolName: "filler", id: 'colorFiller', iconPath: './icons/color-fill.svg', handler: "handleColorFillerSelection", cursorType: "custom", cursor: 'icons/color-fill.svg', hasChildern: false, classes: [] }
 ];
 let basicTools = document.getElementById("basic");
 let toolItems = '';
@@ -329,18 +450,30 @@ tools.map((tool) => {
         </button>`;
     }
     else {
-        toolItems += `<button class="toolItem" id="${tool.id}__button">`
-        toolItems += `<img id=${tool.id} src="${tool.iconPath}" onclick='${tool.handler}(${JSON.stringify(tool)})'/>`;
+        toolItems += `
+            <button 
+                class="toolItem ${tool.classes ? tool.classes.join(' ') : ''}"
+                id="${tool.id}__button"
+            >`
+        toolItems += `
+            <img 
+                id=${tool.id} 
+                src="${tool.iconPath}" 
+                onclick=' ${tool.handler}(${JSON.stringify(tool)})' 
+            />`;
+
+        if (tool.hasChildern)
+            toolItems += `<div class="tooltiptext" id="${tool.id}__children"></div>`
+
         toolItems += `</button>`;
     }
 })
 basicTools.innerHTML = toolItems;
 
-
-updateStatus();
 reset();
 
-// color picker
+// onclick handlers for color picker
+
 const handleColorSelection = (color) => {
     if (selectedTool == "pencil")
         changeStrokeColor(color);
@@ -350,6 +483,11 @@ const handleColorSelection = (color) => {
 
     else if (selectedTool == "text") {
         fontColor = color.colorName;
+        context.fillStyle = color.colorCode;
+    }
+
+    else if (selectedTool == "colorFiller") {
+        fillerColor = color.colorName;
         context.fillStyle = color.colorCode;
     }
 
@@ -399,7 +537,7 @@ colorRows.map((row, rowIndex) => {
         <div
             onclick='handleColorSelection(${JSON.stringify(column)})'
             class="one column" 
-            style="background-color: ${column.colorCode}; width: 20px; height: 20px" 
+            style="background-color: ${column.colorCode}; width: 20px; height: 20px; margin: 2px" 
             id="${colorPickerId}${rowIndex + 1}${columnIndex + 2}"
         ></div>`
     })
@@ -419,3 +557,28 @@ availabelFonts.map(eachFont => {
 });
 
 document.getElementById("fontFamilySelector").innerHTML = fontFamilyOptions;
+
+
+// shapes
+
+const shapes = {
+    square: { shapeName: 'square', iconPath: './icons/square.svg', cursorType: 'builtIn', cursor: 'crosshair' },
+    triangle: { shapeName: 'triangle', iconPath: './icons/triangle.svg', cursorType: 'builtIn', cursor: 'crosshair' },
+    circle: { shapeName: 'circle', iconPath: './icons/circle.svg', cursorType: 'builtIn', cursor: 'crosshair' },
+}
+let toolTipChildren = '';
+
+Object.keys(shapes).map(shape => {
+    toolTipChildren += `<img src="${shapes[shape].iconPath}" onClick='shapeChanged(${JSON.stringify(shapes[shape])})'></img>`;
+});
+
+document.getElementById('listShapes__children').innerHTML = toolTipChildren;
+
+// onclick handlers for shapes
+
+const shapeChanged = (shape) => {
+    let tool = { toolName: "listShapes", id: 'listShapes', iconPath: './icons/listShapes.svg', handler: "handleListShapesSelection", cursorType: "builtIn", cursor: 'crosshair', hasChildern: true, classes: ['tooltip'] }
+    changeHighlighter(tool);
+    selectedTool = shape.shapeName;
+    context.globalCompositeOperation = "source-over";
+}
