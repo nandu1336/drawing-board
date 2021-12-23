@@ -80,7 +80,7 @@ const clearArc = (context, x, y, radius) => {
     context.save();
     context.globalCompositeOperation = 'destination-out';
     context.beginPath();
-    context.arc(x, y, radius, 0, 2 * Math.PI, false);
+    context.arc(x, y, radius + 1, 0, 2 * Math.PI, false);
     context.fill();
     context.restore();
 }
@@ -183,15 +183,14 @@ window.onload = () => {
             shpaesOnCanvas.push(tempRect);
             console.log("created Reactangle object:", tempRect);
             context.stroke(rectPath);
-            originX = 0;
-            originY = 0;
             prevWidth = null;
             prevWidth = null;
         }
 
-        else if (selectedTool == "triable") { }
+        else if (selectedTool == "triangle") { }
 
         else if (selectedTool == "circle") {
+            prevRadius = 0;
             context.setLineDash([]);
             let radius = Math.sqrt(Math.pow((originX - toX), 2) + Math.pow((originY - toY), 2));
             context.beginPath();
@@ -210,6 +209,9 @@ window.onload = () => {
             context.closePath();
 
         }
+
+        originX = 0;
+        originY = 0;
 
         // storing current canvas data into stack
         if (currentStackFrame) {
