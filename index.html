@@ -46,21 +46,23 @@
 
     <div class="container">
         <div class="toolBar row" id="toolBar">
-            <div id="basic" class=" six columns" style="margin-top:5px"></div>
+            <div id="basic" class=" five columns" style="margin-top:5px"></div>
 
-            <div class="three columns" style="margin-top:5px;">
+            <div class="two columns" style="margin-top:5px;">
                 <select class="u-full-width" id="fontFamilySelector" onchange="changeFontFamily()">
 
                 </select>
             </div>
 
-            <div id="colorPicker" class=" three columns u-pull-right" style="margin-top: 2px;">
-                <div class="row" id="colorPicker__row1">
+            <div id="colorPicker" class=" three columns" style="margin-top: 2px;">
+                <div class="eight columns">
+                    <div class="row" id="colorPicker__row1">
 
-                </div>
+                    </div>
 
-                <div class="row" id="colorPicker__row2">
+                    <div class="row" id="colorPicker__row2">
 
+                    </div>
                 </div>
 
             </div>
@@ -68,10 +70,19 @@
 
         </div>
 
-        <div class="row" id="canvasWrapper" style="border: 1px solid black;">
-            <canvas id="myCanvas">
-                Your browser does not support the HTML canvas tag.
-            </canvas>
+        <div class="row">
+            <div class="ten columns" id="canvasWrapper">
+
+                <canvas id="myCanvas">
+                    Your browser does not support the HTML canvas tag.
+                </canvas>
+
+            </div>
+
+            <div class="two columns" onclick="generateColors()" id="colorsGenerator">
+                <img src="./icons/listShapes.svg">
+            </div>
+
 
         </div>
 

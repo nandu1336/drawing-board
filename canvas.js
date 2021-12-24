@@ -1,6 +1,7 @@
 let canvas = document.getElementById('myCanvas');
 let canvasWrapper = document.getElementById("canvasWrapper");
 canvas.height = 500;
+// canvas.width = document.getElementById("")
 canvas.width = canvasWrapper.clientWidth;
 
 let context = canvas.getContext("2d");
@@ -529,6 +530,12 @@ let colorRows = [
         { colorName: "Burgundy", colorCode: "#870A30" },
     ]
 ];
+
+const generateColors = () => {
+    console.log("generateColors called.");
+
+}
+
 
 // code to add color picker to the toolbar
 

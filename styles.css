@@ -11,10 +11,10 @@ html{
 .ls-1{
     line-height:1px;
 }
-.flexBoxRow{
+/* .flexBoxRow{
     display: flex;
     flex-direction: row;
-}
+} */
 
 .toolBar{
     border: 1px solid black;
@@ -72,3 +72,15 @@ html{
     opacity: 1;
   }
   
+  #colorsGenerator{
+      margin-top: 2px;
+      margin-left: 0%;
+      padding: 3px;
+      padding-top: 5px;
+  }
+
+  #canvasWrapper
+  {
+      border: 1px solid black;
+      margin: 1px;
+  }
