@@ -1,0 +1,30 @@
+# [PostScriptName]
+# 	f=FamilyName
+# 	s=StyleName
+# 	l=Windows_Compatible_MenuName
+# 	m=1,Macintosh_Compatible_MenuName
+
+[SpaceMono-Regular]
+	f=Space Mono
+	s=Regular
+	l=Space Mono
+	m=1,Space Mono
+
+[SpaceMono-Italic]
+	f=Space Mono
+	s=Italic
+	l=Space Mono
+	m=1,Space Mono Italic
+
+[SpaceMono-Bold]
+	f=Space Mono
+	s=Bold
+	l=Space Mono
+	m=1,Space Mono Bold
+	
+[SpaceMono-BoldItalic]
+	f=Space Mono
+	s=Bold Italic
+	l=Space Mono
+	m=1,Space Mono Bold Italic
+	

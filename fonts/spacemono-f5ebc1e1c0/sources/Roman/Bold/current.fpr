@@ -1,0 +1,8 @@
+ReleaseMode	true
+InputFontPath	./Space-Mono-Bold-source.ttf
+OutputFontPath	./Space-Mono-Bold.ttf
+FeaturePath	./features
+FontMenuDBPath	../../FontMenuNameDB
+GlyphAliasDBPath	./GlyphOrderAndAliasDB
+IsBoldStyle	true
+kSetfsSelectionBitsOn	[7, 8]
