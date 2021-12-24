@@ -50,7 +50,13 @@
 
 <ol>
   <li> Option to randomize the color palletes.</li>
-  <li> Addition of color f!iller tool.</li>
+  <li> 
+      Addition of color filler tool:
+     <ul>
+        <li> Color filler tool is added but few bugs are observed while filling multiple layered shapes.</li>
+     </ul>
+  </li>
+       
   <li> Bold and Italic modes for text.</li>
   <li> 
      Support for shapes:
