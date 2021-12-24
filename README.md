@@ -62,7 +62,7 @@
      Support for shapes:
     <ul>
       <li> Has a bug while drwaing rectanges - will be fixed soon.</li>
-      <li> Option ot draw triangles is in progress. </li>
+      <li> Option to draw triangles is in progress. </li>
       <li> Option to movee and resize shapes will be implemented. </li>      
     </ul>
   </li>
