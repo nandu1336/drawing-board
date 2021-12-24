@@ -38,9 +38,10 @@ let shapeWidth = 0;
 let shapeHeight = 0;
 let prevWidth = null;
 let prevHeight = null;
-let shpaesOnCanvas = [];
+let shapesOnCanvas = new ShapesOnCanvas();
 let fillerColor = "black";
 let prevRadius = null;
+let tempShape = null;
 
 const updateStatus = () => {
     document.getElementById("statusBar__pencilSize").innerText = pencilSize;
@@ -49,8 +50,6 @@ const updateStatus = () => {
     document.getElementById("statusBar__selectedTool").innerText = selectedTool;
     document.getElementById("statusBar__fontColor").innerText = fontColor;
     document.getElementById("statusBar__fontSize").innerText = fontSize;
-
-
 }
 
 const reset = () => {
@@ -77,14 +76,6 @@ const reset = () => {
     document.getElementById('pencil__button').classList.add("selected");
 }
 
-const clearArc = (context, x, y, radius) => {
-    context.save();
-    context.globalCompositeOperation = 'destination-out';
-    context.beginPath();
-    context.arc(x, y, radius + 1, 0, 2 * Math.PI, false);
-    context.fill();
-    context.restore();
-}
 
 document.addEventListener('mouseup', () => {
     isDrawing = false; context.closePath();
@@ -142,6 +133,8 @@ window.onload = () => {
             isDrawing = true;
             originX = e.offsetX;
             originY = e.offsetY;
+            tempShape = createShape(originX, originY, context, selectedTool);
+            shapesOnCanvas.push(tempShape);
         }
 
         else if (selectedTool == 'pencil') {
@@ -154,52 +147,22 @@ window.onload = () => {
         }
 
         else if (selectedTool == 'colorFiller') {
-            let selectedShape = shpaesOnCanvas.filter(shape => shape.isInside(e.offsetX, e.offsetY));
+            let selectedShape = shapesOnCanvas.shapes.filter(shape => shape.isInside(e.offsetX, e.offsetY));
             selectedShape = selectedShape.length ? selectedShape[0] : null;
             if (!selectedShape) {
                 return alert("Color filler works on shapes. Add a shape and try again.");
             }
-            context.fill(selectedShape.getPath());
+            selectedShape.fillColor(context);
         }
 
     });
 
     canvas.addEventListener('mouseup', (e) => {
-        // console.log('mouseup occured, selectedTool:', selectedTool);
         toX = e.offsetX;
         toY = e.offsetY;
 
-        if (selectedTool == 'square') {
-            context.setLineDash([]);
-            console.log("context.globalCompositeOperation:", context.globalCompositeOperation);
-            let width = toX - originX;
-            let height = toY - originY;
-
-            context.clearRect(originX, originY, prevWidth, prevHeight);
-            let rectPath = new Path2D();
-            let tempRect = new Rectangle(originX, originY, width, height);
-
-            rectPath.rect(originX, originY, width, height);
-            tempRect.addPath(rectPath);
-            shpaesOnCanvas.push(tempRect);
-            console.log("created Reactangle object:", tempRect);
-            context.stroke(rectPath);
-            prevWidth = null;
-            prevWidth = null;
-        }
-
-        else if (selectedTool == "triangle") { }
-
-        else if (selectedTool == "circle") {
-            prevRadius = 0;
-            context.setLineDash([]);
-            let radius = Math.sqrt(Math.pow((originX - toX), 2) + Math.pow((originY - toY), 2));
-            context.beginPath();
-
-            let tempCircle = new Circle(originX, originY, radius);
-            context.arc(originX, originY, radius, 0, 360);
-            shpaesOnCanvas.push(tempCircle);
-            context.stroke();
+        if (Object.keys(shapes).includes(selectedTool)) {
+            tempShape.draw(toX, toY);
         }
 
         else if (selectedTool == "pencil") {
@@ -208,12 +171,9 @@ window.onload = () => {
             context.stroke();
             isDrawing = false;
             context.closePath();
-
+            originX = 0;
+            originY = 0;
         }
-
-        originX = 0;
-        originY = 0;
-
         // storing current canvas data into stack
         if (currentStackFrame) {
             undoStack.push(currentStackFrame);
@@ -236,41 +196,8 @@ window.onload = () => {
         toX = e.offsetX;
         toY = e.offsetY;
 
-        if (selectedTool == 'square') {
-            context.setLineDash([5, 3]);
-            if (prevWidth || prevHeight) {
-                if (prevWidth < 0) prevWidth -= 1;
-                if (prevWidth >= 0) prevWidth += 1;
-
-                if (prevHeight < 0) prevHeight -= 1;
-                if (prevHeight >= 0) prevHeight += 1;
-                context.clearRect(originX, originY, prevWidth, prevHeight);
-
-            }
-
-            width = toX - originX;
-            height = toY - originY;
-            prevWidth = width;
-            prevHeight = height;
-            context.strokeRect(originX, originY, width, height);
-
-        }
-
-        else if (selectedTool == 'circle') {
-            context.setLineDash([5, 3]);
-            if (prevRadius) {
-                if (prevRadius < 0) prevRadius -= 1;
-                if (prevRadius >= 0) prevRadius += 1;
-
-                clearArc(context, originX, originY, prevRadius);
-
-            }
-
-            let radius = Math.sqrt(Math.pow((originX - toX), 2) + Math.pow((originY - toY), 2));
-            context.beginPath()
-            context.arc(originX, originY, radius, 0, 360);
-            context.stroke();
-            prevRadius = radius;
+        if (Object.keys(shapes).includes(selectedTool)) {
+            tempShape.drawOutline(toX, toY);
         }
 
         else if (selectedTool == 'pencil') {
@@ -280,7 +207,7 @@ window.onload = () => {
             fromX = toX;
             fromY = toY;
         }
-
+        shapesOnCanvas.resortShapes();
     });
 
 }
