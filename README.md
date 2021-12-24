@@ -66,4 +66,4 @@
 
 <p>Below is the screenshot of the tool. </p>
 
-[drawing tool](https://user-images.githubusercontent.com/29759906/147365532-06def159-e943-4c20-8b39-cb697a27922d.JPG)
+![drawing tool](https://user-images.githubusercontent.com/29759906/147365532-06def159-e943-4c20-8b39-cb697a27922d.JPG)
