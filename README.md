@@ -36,18 +36,34 @@
   <li> Option to change the background color.</li>
   <li> Undo and Redo </li>
   <li> A reset button to clear everything.</li>
- </ol>
+  
+  <li> 
+     Support for shapes:
+    <ul>
+      <li> Option to draw rectangels and circles is working.</li>
+    </ul>
+  </li>
+ 
+</ol>
 
 <h4> Planned features:</h4>
 
 <ol>
   <li> Option to randomize the color palletes.</li>
-  <li> Addition of color filler tool.</li>
+  <li> Addition of color f!iller tool.</li>
   <li> Bold and Italic modes for text.</li>
-  <li> Support for shapes.</li>
+  <li> 
+     Support for shapes:
+    <ul>
+      <li> Has a bug while drwaing rectanges - will be fixed soon.</li>
+      <li> Option ot draw triangles is in progress. </li>
+      <li> Option to movee and resize shapes will be implemented. </li>      
+    </ul>
+  </li>
+
 </ol>
 <br>
 
 <p>Below is the screenshot of the tool. </p>
 
-![drawing tool](https://user-images.githubusercontent.com/29759906/147117893-5ae05517-82f1-4490-8209-079f2f9fed4f.JPG)
+[drawing tool](https://user-images.githubusercontent.com/29759906/147365532-06def159-e943-4c20-8b39-cb697a27922d.JPG)
