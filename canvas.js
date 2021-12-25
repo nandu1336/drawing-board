@@ -1,12 +1,11 @@
 let canvas = document.getElementById('myCanvas');
 let canvasWrapper = document.getElementById("canvasWrapper");
 canvas.height = 500;
-// canvas.width = document.getElementById("")
 canvas.width = canvasWrapper.clientWidth;
 
 let context = canvas.getContext("2d");
-// context.font = " 22px Share Tech Mono";
 context.font = "22px Ubuntu Mono normal";
+
 let fromX = 0;
 let fromY = 0;
 let toX = 0;
@@ -134,7 +133,6 @@ window.onload = () => {
             originX = e.offsetX;
             originY = e.offsetY;
             tempShape = createShape(originX, originY, context, selectedTool);
-            shapesOnCanvas.push(tempShape);
         }
 
         else if (selectedTool == 'pencil') {
@@ -163,6 +161,7 @@ window.onload = () => {
 
         if (Object.keys(shapes).includes(selectedTool)) {
             tempShape.draw(toX, toY);
+            shapesOnCanvas.push(tempShape);
         }
 
         else if (selectedTool == "pencil") {

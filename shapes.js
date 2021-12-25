@@ -101,7 +101,7 @@ function Rectangle(x, y, context) {
     this.calculateProperties = function () {
         this.x2 = this.x + this.width;
         this.y2 = this.y + this.height;
-        this.area = this.width * this.height;
+        this.area = Math.abs(this.width * this.height);
     }
 
     this.draw = function (toX, toY) {
