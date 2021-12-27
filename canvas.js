@@ -15,9 +15,11 @@ let isDrawing = false;
 let eraserSize = 5;
 let pencilSize = 2;
 let stepSize = 2;
-let pencilColor = 'black';
+let pencilColor = { colorName: "black", colorCode: "black" };
+// 'black';
 let selectedTool = 'square';
-let backgroundColor = 'white';
+let backgroundColor = { colorName: 'white', colorCode: "white" }
+// 'white';
 let prevSelectedTool = '';
 
 let currentStackFrame = '';
@@ -31,23 +33,25 @@ let textX = 0;
 let textY = 0;
 let fontSize = 22;
 let fontFamily = "Ubuntu Mono normal";
-let fontColor = "black";
+let fontColor = { colorName: "black", colorCode: "black" }
+//  "black";
 
 let shapeWidth = 0;
 let shapeHeight = 0;
 let prevWidth = null;
 let prevHeight = null;
 let shapesOnCanvas = new ShapesOnCanvas();
-let fillerColor = "black";
+let fillerColor = { colorName: "black", colorCode: "black" }
+// "black";
 let prevRadius = null;
 let tempShape = null;
 
 const updateStatus = () => {
     document.getElementById("statusBar__pencilSize").innerText = pencilSize;
     document.getElementById("statusBar__eraserSize").innerText = eraserSize;
-    document.getElementById("statusBar__pencilColor").innerText = pencilColor;
+    document.getElementById("statusBar__pencilColor").innerText = pencilColor.colorName;
     document.getElementById("statusBar__selectedTool").innerText = selectedTool;
-    document.getElementById("statusBar__fontColor").innerText = fontColor;
+    document.getElementById("statusBar__fontColor").innerText = fontColor.colorName;
     document.getElementById("statusBar__fontSize").innerText = fontSize;
 }
 
@@ -56,7 +60,7 @@ const reset = () => {
     context.closePath();
     eraserSize = 5;
     pencilSize = 2;
-    pencilColor = 'black';
+    pencilColor = { colorName: "black", colorCode: "black" };
     selectedTool = 'square';
     updateStatus();
     handlePencilSelection();
@@ -145,12 +149,21 @@ window.onload = () => {
         }
 
         else if (selectedTool == 'colorFiller') {
+            x = e.offsetX;
+            y = e.offsetY;
+
+            let pixelArray = context.getImageData(x, y, 1, 1).data;
+            let selectedPointColor = [pixelArray[0], pixelArray[1], pixelArray[2], pixelArray[3]];
+            // const selectedPointColor = `rgba(${pixelArray[0]}, ${pixelArray[1]}, ${pixelArray[2]}, ${pixelArray[3] / 255})`;
+            console.log("color at the user selected point: ", selectedPointColor);
+
             let selectedShape = shapesOnCanvas.shapes.filter(shape => shape.isInside(e.offsetX, e.offsetY));
             selectedShape = selectedShape.length ? selectedShape[0] : null;
             if (!selectedShape) {
-                return alert("Color filler works on shapes. Add a shape and try again.");
+                changeBackgroundColor(fillerColor);
             }
-            selectedShape.fillColor(context);
+            selectedShape.fillColor(fillerColor);
+            shapesOnCanvas.shapes.map(shape => { if (shape.id > selectedShape.id) shape.fillColor(); })
         }
 
     });
@@ -206,7 +219,6 @@ window.onload = () => {
             fromX = toX;
             fromY = toY;
         }
-        shapesOnCanvas.resortShapes();
     });
 
 }
@@ -411,13 +423,13 @@ const handleColorSelection = (color) => {
         changeBackgroundColor(color);
 
     else if (selectedTool == "text") {
-        fontColor = color.colorName;
+        fontColor = color;
         context.fillStyle = color.colorCode;
     }
 
     else if (selectedTool == "colorFiller") {
-        fillerColor = color.colorName;
-        context.fillStyle = color.colorCode;
+        fillerColor = color;
+        // context.fillStyle = color.colorCode;
     }
 
     updateStatus();
@@ -426,34 +438,66 @@ const handleColorSelection = (color) => {
 const changeStrokeColor = (color) => {
 
     context.strokeStyle = color.colorCode;
-    pencilColor = color.colorName;
+    pencilColor = color;
 }
 
 const changeBackgroundColor = (color) => {
 
-    backgroundColor = color.colorCode;
+    backgroundColor = color;
     canvas.style.backgroundColor = color.colorCode;
     document.getElementById("backgroundColorPicker").style.backgroundColor = color.colorCode;
 }
 
 // color picker boxes
 
+const hexToRGBA = (hexCode) => {
+    const letterValue = { a: 10, b: 11, c: 12, d: 13, e: 14, f: 15 };
+    let baseValue = 16;
+    let color = [];
+    let r = 0;
+    hexCode.split('').map((l) => {
+
+        if (l !== '#') {
+
+            if (Object.keys(letterValue).includes(l.toLowerCase()))
+                l = letterValue[l.toLowerCase()];
+            else
+                l = parseInt(l);
+
+            l *= baseValue;
+            r += l;
+
+            if (baseValue === 1) {
+                baseValue = 16;
+                color.push(r);
+                r = 0;
+
+            }
+            else {
+                baseValue = 1;
+            }
+        }
+    }, baseValue, color, r)
+    color.push(1)
+    return color;
+}
+
 let colorRows = [
     [
-        { colorName: "Violet", colorCode: "#9400D3" },
-        { colorName: "Indigo", colorCode: "#4B0082" },
-        { colorName: "Blue", colorCode: "#0000FF" },
-        { colorName: "Green", colorCode: "#00FF00" },
-        { colorName: "Yellow", colorCode: "#FFFF00" },
-        { colorName: "Orange", colorCode: "#FF7F00" },
+        { colorName: "Violet", colorCode: "#9400D3", rgba: hexToRGBA("#9400D3") },
+        { colorName: "Indigo", colorCode: "#4B0082", rgba: hexToRGBA("#4B0082") },
+        { colorName: "Blue", colorCode: "#0000FF", rgba: hexToRGBA("#0000FF") },
+        { colorName: "Green", colorCode: "#00FF00", rgba: hexToRGBA("#00FF00") },
+        { colorName: "Yellow", colorCode: "#FFFF00", rgba: hexToRGBA("#FFFF00") },
+        { colorName: "Orange", colorCode: "#FF7F00", rgba: hexToRGBA("#FF7F00") },
     ],
     [
-        { colorName: "Red", colorCode: "#FF0000" },
-        { colorName: "Blue Grey", colorCode: "#90ADC6" },
-        { colorName: "Pewter", colorCode: "#E9EAEC" },
-        { colorName: "Dark Blue", colorCode: "#333652" },
-        { colorName: "Pink", colorCode: "#E151AF" },
-        { colorName: "Burgundy", colorCode: "#870A30" },
+        { colorName: "Red", colorCode: "#FF0000", rgba: hexToRGBA("#FF0000") },
+        { colorName: "Blue Grey", colorCode: "#90ADC6", rgba: hexToRGBA("#90ADC6") },
+        { colorName: "Pewter", colorCode: "#E9EAEC", rgba: hexToRGBA("#E9EAEC") },
+        { colorName: "Dark Blue", colorCode: "#333652", rgba: hexToRGBA("#333652") },
+        { colorName: "Pink", colorCode: "#E151AF", rgba: hexToRGBA("#E151AF") },
+        { colorName: "Burgundy", colorCode: "#870A30", rgba: hexToRGBA("#870A30") },
     ]
 ];
 

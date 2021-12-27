@@ -69,6 +69,7 @@ function ShapesOnCanvas() {
     }
 
     this.push = function (shape) {
+        shape.setId(this.shapes.length);
         let temp = this.sortedInsert(this.shapes, shape, "area");
         this.shapes = temp;
         console.log("sorted shapesOnCanvas:", temp);
@@ -97,6 +98,10 @@ function Rectangle(x, y, context) {
     this.path = null;
     this.prevWidth = null;
     this.prevWidth = null;
+
+    this.setId = (id) => {
+        this.id = id;
+    }
 
     this.calculateProperties = function () {
         this.x2 = this.x + this.width;
@@ -156,9 +161,53 @@ function Rectangle(x, y, context) {
         return this.path;
     }
 
-    this.fillColor = function () {
-        this.context.fillRect(this.x, this.y, this.width, this.height);
+    this.isSameColor = function (c1, pixelArray, offset) {
+
+        console.log(`c1: ${c1} `);
+        return "" + c1[0] + c1[1] + c1[2] + c1[3] == "" + pixelArray[offset + 0] + pixelArray[offset + 1] + pixelArray[offset + 2] + pixelArray[offset + 3];
     }
+
+    this.fillColor = function (selectedPointColor, fillerColor) {
+        console.log("selectedPointColor in fillColor: ", selectedPointColor);
+        console.log("fillColor:", fillerColor);
+        console.log("this.x:", this.x);
+        console.log("this.y:", this.y);
+        console.log("this.height:", this.height);
+        console.log("this.width:", this.width);
+
+        this.imageData = this.context.getImageData(this.x, this.y, this.width, this.height);
+        let pixelsArray = this.imageData.data;
+        let offset = 0;
+
+        for (let x = this.x; x < this.width; x++) {
+            for (let y = this.y; y < this.height; y++) {
+                console.log("inside innerfor loop")
+                if (x == 0 && y == 0)
+                    offset = 0;
+                else
+                    offset = ((y * this.width + x) * 4) + 1;
+
+                console.log("offset : ", offset);
+
+                if (!this.isSameColor(selectedPointColor, pixelsArray, offset))
+                    continue;
+
+                let iter = 0;
+                while (iter < 4) {
+                    pixelsArray[offset + iter] = fillerColor.rgba[iter];
+                    iter++;
+                }
+
+            }
+
+        }
+        console.log("loop exited");
+        this.context.putImageData(this.imageData, this.x, this.y);
+    }
+
+
+    // this.context.fillRect(this.x, this.y, this.width, this.height);
+    // }
 
 }
 
@@ -169,6 +218,12 @@ function Circle(x, y, context) {
     this.radius = null;
     this.prevRadius = null;
     this.area = null;
+    this.filledColor = null;
+
+
+    this.setId = (id) => {
+        this.id = id;
+    }
 
     this.getArea = () => {
         this.area = this.radius ? 2 * Math.PI * this.radius : 0;
@@ -229,7 +284,16 @@ function Circle(x, y, context) {
     }
 
 
-    this.fillColor = function () {
+    this.fillColor = function (color = null) {
+
+        if (color) {
+            this.context.fillStyle = color.colorCode;
+            this.filledColor = color;
+        }
+        else if (this.filledColor) this.context.fillStyle = this.filledColor.colorCode;
+        else this.context.fillStyle = "white";
+
+
         this.context.beginPath();
         this.context.arc(this.x, this.y, this.radius, 0, 360);
         this.context.fill();
