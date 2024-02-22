@@ -1,5 +1,5 @@
-let canvas = document.getElementById('myCanvas');
-let canvasWrapper = document.getElementById("canvasWrapper");
+const canvas = document.getElementById('myCanvas');
+const canvasWrapper = document.getElementById("canvasWrapper");
 canvas.height = 500;
 canvas.width = canvasWrapper.clientWidth;
 
@@ -107,14 +107,21 @@ window.onload = () => {
         if (selectedTool == 'text') {
             isDrawing = false;
             let key = e.key;
-
+            let isShiftClicked = false; 
 
             if (SPECIAL_KEYS.includes(key)) {
                 if (key == "Backspace") {
                     textBuffer = textBuffer.substring(0, (textBuffer.length - 1));
                 }
             }
+            else if (key == 'Shift'){
+                isShiftClicked = true;
+            }
+            
             else {
+                if (isShiftClicked){
+                    key = key.toUpperCase();
+                }
                 textBuffer += key;
             }
 
